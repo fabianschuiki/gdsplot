@@ -1,0 +1,9 @@
+[package]
+name = "gdsplot"
+version = "0.1.0"
+authors = ["Fabian Schuiki <fschuiki@student.ethz.ch>"]
+
+[dependencies]
+getopts = "0.2"
+cairo = "0.0.4"
+gds = { path = "libgds" }
