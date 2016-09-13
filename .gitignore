@@ -1,5 +1,6 @@
 .*
 !.git*
 *.lock
+!/Cargo.lock
 *.png
 target
