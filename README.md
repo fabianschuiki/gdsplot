@@ -5,6 +5,6 @@ A simple stylesheet-based GDSII plotter. Relies on the [libgds](https://github.c
 
 ## Usage
 
-  gdsplot [-s STYLESHEET ...] GDS_FILE CELL ...
+    gdsplot [-s STYLESHEET ...] GDS_FILE CELL ...
 
 Given a GDS file name, the program will render all of the given cells. Multiple stylesheets can be defined, with latter overriding options from the former. Take a look at `load_stylesheet(...)` in `src/main.rs` to see the different options available.
