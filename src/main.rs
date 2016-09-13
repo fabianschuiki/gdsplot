@@ -29,7 +29,7 @@ fn main() {
 	// Configure and parse the command line options.
 	let mut opts = Options::new();
 	opts.optflag("h", "help", "print this help page");
-	opts.optopt("s", "style", "load the given stylesheet", "STYLESHEET");
+	opts.optmulti("s", "style", "load the given stylesheet", "STYLESHEET");
 	let matches = match opts.parse(args) {
 		Ok(m) => { m },
 		Err(m) => {
@@ -47,12 +47,19 @@ fn main() {
 		print_usage(opts);
 		std::process::exit(1);
 	}
+	// println!("matches: {:?}", matches.free);
 	let filename = &matches.free[0];
 	let structs = &matches.free[1..];
 
 	// Load the GDS file to be plotted.
-	let mut rd = gds::Reader::open_file(filename.as_str(), 0).expect("unable to open file");
-	let lib = gds::Library::read(&mut rd).expect("unable to read file");
+	let mut rd = match gds::Reader::open_file(filename.as_str(), 0) {
+		Ok(rd) => rd,
+		Err(_) => {
+			writeln!(&mut stderr(), "Unable to open GDS file `{}`", filename).unwrap();
+			std::process::exit(1);
+		}
+	};
+	let lib = gds::Library::read(&mut rd).expect("Unable to read GDS file");
 
 	// Assemble the context from the command line arguments.
 	let mut ctx = Context::new(&lib);
@@ -70,7 +77,7 @@ fn main() {
 		let strukt = match lib.find_struct(name) {
 			Some(s) => s,
 			None => {
-				writeln!(&mut stderr(), "unable to find cell {}", name).unwrap();
+				writeln!(&mut stderr(), "Unable to find cell {}", name).unwrap();
 				std::process::exit(1);
 			}
 		};
@@ -681,6 +688,7 @@ fn plot(ctx: &Context, strukt: &Struct) {
 	// Prepare the plot surface.
 	let mut surface = cairo::surface::Surface::create_image(cairo::surface::format::Format::ARGB32, plot_size.0 as i32, plot_size.1 as i32);
 	let mut cr = cairo::Cairo::create(&mut surface);
+	cr.set_fill_rule(cairo::fill_rule::FillRule::EvenOdd);
 
 	// Draw the background.
 	if let Some(bgc) = ctx.bg_color {
@@ -704,11 +712,11 @@ fn plot_struct(ctx: &Context, strukt: &Struct, tx: Transform, cr: &mut cairo::Ca
 			cr.push_group();
 			cr.set_source_rgb(fs.color.r, fs.color.g, fs.color.b);
 			gather_geometry(strukt, layer, tx, cr, Pass::Fill);
-			cr.fill();
 			cr.pop_group_to_source();
 			cr.paint_with_alpha(fs.alpha);
 		}
-
+	}
+	for layer in &strukt.layers {
 		// Stroke the geometry on this layer.
 		if let Some(ss) = layer.style.get_stroke_style() {
 			cr.save();
@@ -718,7 +726,6 @@ fn plot_struct(ctx: &Context, strukt: &Struct, tx: Transform, cr: &mut cairo::Ca
 			}
 			cr.set_line_width(ss.width);
 			gather_geometry(strukt, layer, tx, cr, Pass::Stroke);
-			cr.stroke();
 			cr.restore();
 		}
 	}
@@ -751,5 +758,10 @@ fn gather_geometry(strukt: &Struct, layer: &Rc<Layer>, tx: Transform, cr: &mut c
 		}
 
 		cr.close_path();
+
+		match pass {
+			Pass::Fill => cr.fill(),
+			Pass::Stroke => cr.stroke(),
+		}
 	}
 }

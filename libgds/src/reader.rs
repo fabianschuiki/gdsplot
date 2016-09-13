@@ -3,6 +3,7 @@
 //! This module implements a wrapper around the gds_reader_t struct.
 
 use std::ptr;
+use std::ffi::CString;
 use libc::{c_char, c_void, c_int};
 
 
@@ -22,8 +23,9 @@ impl Reader {
 	/// Open a GDS file for reading.
 	pub fn open_file(path: &str, flags: i32) -> Result<Reader, ()> {
 		let mut p: *mut c_void = ptr::null_mut();
+		let path_cstr = CString::new(path).unwrap();
 		let fr = unsafe {
-			gds_reader_open_file(&mut p, path.as_ptr() as *const c_char, flags)
+			gds_reader_open_file(&mut p, path_cstr.as_ptr(), flags)
 		};
 		if fr == 0 {
 			assert!(!p.is_null());
