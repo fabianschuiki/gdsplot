@@ -6,4 +6,4 @@ authors = ["Fabian Schuiki <fschuiki@student.ethz.ch>"]
 [dependencies]
 getopts = "0.2"
 cairo = "0.0.4"
-gds = { path = "libgds" }
+gds = { git = "https://github.com/fabianschuiki/libgds-rs", tag = "v0.1.0" }

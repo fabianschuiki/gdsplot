@@ -1,7 +1,0 @@
-[package]
-name = "gds"
-version = "0.1.0"
-authors = ["Fabian Schuiki <fschuiki@student.ethz.ch>"]
-
-[dependencies]
-libc = "0.2"
